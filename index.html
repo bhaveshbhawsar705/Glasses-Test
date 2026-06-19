@@ -768,7 +768,7 @@
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
-    // ── Draw frame (cover fit) ──
+    // ── Draw frame (fit to width without upscaling) ──
     function drawFrame(frameIndex) {
         const img = frames[frameIndex];
         if (!img || !img.complete || !img.naturalWidth) return;
@@ -776,24 +776,26 @@
         const cw = window.innerWidth;
         const ch = window.innerHeight;
 
-        // "cover" fit
         const imgRatio = img.naturalWidth / img.naturalHeight;
-        const canvasRatio = cw / ch;
-        let drawW, drawH, offsetX, offsetY;
-
-        if (canvasRatio > imgRatio) {
-            drawW = cw;
-            drawH = cw / imgRatio;
-            offsetX = 0;
-            offsetY = (ch - drawH) / 2;
-        } else {
-            drawH = ch;
-            drawW = ch * imgRatio;
-            offsetX = (cw - drawW) / 2;
-            offsetY = 0;
+        
+        let drawW = cw;
+        let drawH = cw / imgRatio;
+        
+        // Prevent upscaling beyond the image's natural resolution
+        if (drawW > img.naturalWidth) {
+            drawW = img.naturalWidth;
+            drawH = img.naturalHeight;
         }
+        
+        const offsetX = (cw - drawW) / 2;
+        const offsetY = (ch - drawH) / 2;
 
         ctx.clearRect(0, 0, cw, ch);
+        
+        // Ensure high quality rendering
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        
         ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
     }
 
